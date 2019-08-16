@@ -10,49 +10,8 @@ import dialogflow
 
 import requests, json 
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-
-def getLocation():
-    options = Options()
-    options.add_argument("--use-fake-ui-for-media-stream")
-    timeout = 20
-    driver = webdriver.Chrome(executable_path = './chromedriver', chrome_options=options)
-    driver.get("https://mycurrentlocation.net/")
-    wait = WebDriverWait(driver, timeout)
-    longitude = driver.find_elements_by_xpath('//*[@id="longitude"]')
-    longitude = [x.text for x in longitude]
-    longitude = str(longitude[0])
-    latitude = driver.find_elements_by_xpath('//*[@id="latitude"]')
-    latitude = [x.text for x in latitude]
-    latitude = str(latitude[0])
-    driver.quit()
-    return (latitude,longitude)
-
 # define home function 
 def home(request):
-    gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY) 
-    # reverse_geocode_result = gmaps.reverse_geocode(getLocation())
-    # current_location = reverse_geocode_result[0]['formatted_address']
-  
-    # # # Requires cities name 
-    # dist = gmaps.distance_matrix(current_location,'Pune')['rows'][0]['elements'][0] 
-    
-    # # Printing the result 
-    # print(dist)
-    # distance = dist['distance']['text']
-    # duration = dist['duration']['text']
-
-    # url = "https://www.googleapis.com/geolocation/v1/geolocate?key="
-    # output = requests.post(url+settings.GOOGLE_MAP_KEY)
-    # response = output.json()
-    # lat = response['location']['lat']
-    # lng = response['location']['lng']
-    # reverse_geocode_result = gmaps.reverse_geocode((lat, lng))
-    # current_location = reverse_geocode_result[0]['formatted_address']
-    # print(current_location)
-
     _html = """
         <iframe
             allow="microphone;"
@@ -113,38 +72,6 @@ def get_formatted_address(gmaps, lat, lng):
     return current_location
 
 
-# def google_search(query):
-#     # try: 
-#     #     from googlesearch import search 
-#     # except ImportError:  
-#     #     print("No module named 'google' found") 
-    
-#     # for j in search(query, num=10, stop=1, pause=2): 
-#     #     print(j) 
-
-#     from lib.google_search_results import GoogleSearchResults
-#     query = GoogleSearchResults({"q": query, "location": "Delhi, India"})
-#     json_results = query.get_json()
-#     print(json_results)
-
-
-from bs4 import BeautifulSoup
- 
- 
-USER_AGENT = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'}
- 
- 
-def google_search(search_term, number_results, language_code):
-    assert isinstance(search_term, str), 'Search term must be a string'
-    assert isinstance(number_results, int), 'Number of results must be an integer'
-    escaped_search_term = search_term.replace(' ', '+')
- 
-    google_url = 'https://www.google.com/search?q={}&num={}&hl={}'.format(escaped_search_term, number_results, language_code)
-    response = requests.get(google_url, headers=USER_AGENT)
-    response.raise_for_status()
- 
-    return search_term, response.text
-
 
 @csrf_exempt
 def new_webhook(request):
@@ -157,6 +84,12 @@ def new_webhook(request):
     text       = req.get('queryResult').get('queryText')
     project_id = 'shyam-jgqxkh'
     session_id = 'ba059625-927f-e7fe-2eb2-b2ebbf5a3f87'
+
+    '''
+        text       = req.get('queryResult').get('queryText')
+        project_id = 'shyam-jgqxkh'
+        session_id = 'ba059625-927f-e7fe-2eb2-b2ebbf5a3f87'
+        '''
 
     output = detect_intent_texts(project_id, session_id, req)
     print(text)
@@ -179,14 +112,6 @@ def webhook(request):
 
         output = detect_intent_texts(project_id, session_id, req)
         reply = output
-        
-        # gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
-        # dist = gmaps.distance_matrix('Delhi','Pune')['rows'][0]['elements'][0]
-        # distance = dist['distance']['text']
-        # duration = dist['duration']['text']
-        # reply = {'fulfillmentText': 'Distance Between Delhi to Pune.', "distance": distance, "duration":duration}
-
-        
 
     if action == 'get_review':
         gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
@@ -200,7 +125,7 @@ def webhook(request):
         rating = outputs['results'][0]['rating']
         place = outputs['results'][0]['place_id']
 
-        if 'contact' in text:
+        if 'contact' in text.strip() or 'phone' in text.strip() or 'number' in text.strip():
             contact_url = 'https://maps.googleapis.com/maps/api/place/details/json?placeid='
             contact_res = requests.get(contact_url + place + '&rankby=distance&fields=formatted_phone_number&key=' + settings.GOOGLE_MAP_KEY)
 
@@ -226,7 +151,7 @@ def webhook(request):
             tl = text.split("from")
             places = tl[1].split('to')
             dist = None
-            if 'current' in places[0]:
+            if 'current' in places[0].strip():
                 dist = gmaps.distance_matrix(current_location, places[1])['rows'][0]['elements'][0]
 
             dist = gmaps.distance_matrix(places[0], places[1])['rows'][0]['elements'][0]
@@ -262,7 +187,7 @@ def webhook(request):
         response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY) 
         outputs = response.json()
         
-        # fulfillmentText = 'Search Result'
+        fulfillmentText = 'Search Result'
 
         aog = actions_on_google_response()
         aog_sr = aog.simple_response([
@@ -294,22 +219,7 @@ def webhook(request):
         lat = get_lat()
         lng = get_lng()
         current_location = get_formatted_address(gmaps, lat, lng)
-        destination = 'Novotel'
-
-        dist = gmaps.distance_matrix(current_location, destination)['rows'][0]['elements'][0]
-        print(dist)
-        '''
-        text       = req.get('queryResult').get('queryText')
-        project_id = 'shyam-jgqxkh'
-        session_id = 'ba059625-927f-e7fe-2eb2-b2ebbf5a3f87'
-        '''
-
-        # distance = dist['distance']['text']
-        # duration = dist['duration']['text']
-
-        # output = detect_intent_texts(project_id, session_id, req)
-        reply = {'fulfillmentText': 'Distance.'}
-        # reply = {'fulfillmentText': 'Distance.', "distance": distance, "duration":duration}
+        reply = {'fulfillmentText': current_location}
 
    
     if action == 'get_places':
@@ -326,19 +236,18 @@ def webhook(request):
         response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY) 
         outputs = response.json()
         
-        fulfillmentText = 'Search Result'
+        hotels = []
+
+        for output in outputs['results']:
+            hotels.append(output['name'])
+
+
+        fulfillmentText = hotels[0] + ", " + hotels[1] + ", " + hotels[2]
 
         aog = actions_on_google_response()
         aog_sr = aog.simple_response([
             [fulfillmentText, fulfillmentText, False]
         ])
-        
-        hotels = []
-
-        for output in outputs['results']:
-            if output['rating'] > 4:
-                hotels.append(output['name'])
-
         aog_sc = aog.suggestion_chips(hotels[:3])
 
         ff_response = fulfillment_response()
