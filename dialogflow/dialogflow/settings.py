@@ -25,7 +25,7 @@ SECRET_KEY = 's2-5xl!qvi+mpx4(qhdtc6t727pxxx4_ke6i)0f3f#h7k0znap'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['03b8d9a4.ngrok.io', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -121,3 +121,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 GOOGLE_MAP_KEY = 'AIzaSyBLVMNz1H2_nkFyphOKej2wo4Wsr5jH054'
+GOOGLE_SEARCH_KEY = 'AIzaSyBjWJ3p-0ci1r8p5cKvZHNEBhdF2O_IfnM'
