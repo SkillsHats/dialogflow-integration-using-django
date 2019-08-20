@@ -15,12 +15,14 @@ from googletrans import Translator
 # define home function 
 def home(request):
     _html = """
+    <div style="margin: 0px 35%">
         <iframe
             allow="microphone;"
             width="350"
             height="430"
             src="https://console.dialogflow.com/api-client/demo/embedded/26dd64a2-4638-439c-8278-5fd4b386ed5d">
         </iframe>
+    </div>
     """
 
     return HttpResponse( _html )
@@ -288,7 +290,10 @@ def new_webhook(request):
             reply = {'fulfillmentText': new_text[0].text + ", " + new_text[1].text + ", " + new_text[2].text}
             return JsonResponse(reply, safe=False)
 
-        fulfillmentText = hotels[0] + ", " + hotels[1] + ", " + hotels[2]
+        try:
+            fulfillmentText = hotels[0] + ", " + hotels[1] + ", " + hotels[2]
+        except:
+            fulfillmentText = "Sorry, I didn't get it"
 
         aog = actions_on_google_response()
         aog_sr = aog.simple_response([
