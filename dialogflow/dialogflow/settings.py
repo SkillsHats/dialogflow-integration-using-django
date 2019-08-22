@@ -119,6 +119,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = 'static'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = 'media'
 
 GOOGLE_MAP_KEY = 'AIzaSyBLVMNz1H2_nkFyphOKej2wo4Wsr5jH054'
 GOOGLE_SEARCH_KEY = 'AIzaSyBjWJ3p-0ci1r8p5cKvZHNEBhdF2O_IfnM'
