@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from library.df_response_lib import *
+import csv
 import json
 import googlemaps
 import dialogflow
@@ -86,41 +87,30 @@ def kelvin_to_celsius(kelvin):
     return round(kelvin - 273.15)
 
 
-class Location(object):
-    def __init__(self, lat=0, lng=0):
-        self._lat = lat
-        self._lng = lng
-
-    def get_lat(self):
-        return self._lat
-
-    def get_lng(self):
-        return self._lng
-
-latitude = 0
-longitude = 0
-
 @csrf_exempt
 def get_location(request):
     json_data=json.loads(request.body)
-    global latitude
-    global longitude
     latitude = json_data['lat']
     longitude = json_data['lng']
-    # print("------------------------", latitude, longitude)
-    # loc = Location(json_data['lat'], json_data['lng'])
-    # Location.latitude = json_data['lat']
-    # Location.longitude = json_data['lng']
+
+    with open('lat_lng.csv', mode='w') as file:
+        writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        writer.writerow([latitude, longitude])
+
     return HttpResponse('ok')
-#
-# def location():
-#     print("Lat: " + Location.latitude + " " + Location.longitude)
 
 @csrf_exempt
 def new_webhook(request):
     req = json.loads(request.body)
     action = req.get('queryResult').get('action')
-    # print(latitude, longitude)
+    latitude = -34.397
+    longitude = 150.644
+    with open('lat_lng.csv','rt')as f:
+        data = csv.reader(f)
+
+        for row in data:
+            latitude = row[0]
+            longitude= row[1]
 
     # REVIEW INTENT
     if action == 'get_review':
@@ -230,7 +220,7 @@ def new_webhook(request):
 
         response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY)
         outputs = response.json()
-
+        print("Output: ", outputs)
         fulfillmentText = 'Search Result'
 
         aog = actions_on_google_response()
