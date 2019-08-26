@@ -94,7 +94,7 @@ def get_location(request):
         latitude = json_data['lat']
         longitude = json_data['lng']
 
-        with open('lat_lng.csv', mode='w') as file:
+        with open(settings.BASE_DIR+'/lat_lng.csv', mode='w') as file:
             writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow([latitude, longitude])
 
@@ -107,7 +107,7 @@ def new_webhook(request):
     action = req.get('queryResult').get('action')
     latitude = -34.397
     longitude = 150.644
-    with open('lat_lng.csv','rt')as f:
+    with open(settings.BASE_DIR+'/lat_lng.csv','rt')as f:
         data = csv.reader(f)
 
         for row in data:
