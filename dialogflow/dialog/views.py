@@ -94,9 +94,11 @@ def get_location(request):
         latitude = json_data['lat']
         longitude = json_data['lng']
 
-        with open(settings.BASE_DIR+'/lat_lng.csv', mode='w') as file:
-            writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow([latitude, longitude])
+        settings.CURRENT_LAT = latitude
+        settings.CURRENT_LNG = longitude
+        # with open(settings.BASE_DIR+'/lat_lng.csv', mode='w') as file:
+        #     writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        #     writer.writerow([latitude, longitude])
 
         return HttpResponse('ok')
     return HttpResponse('Send data in POST Method')
@@ -105,14 +107,14 @@ def get_location(request):
 def new_webhook(request):
     req = json.loads(request.body)
     action = req.get('queryResult').get('action')
-    latitude = -34.397
-    longitude = 150.644
-    with open(settings.BASE_DIR+'/lat_lng.csv','rt')as f:
-        data = csv.reader(f)
-
-        for row in data:
-            latitude = row[0]
-            longitude= row[1]
+    latitude = settings.CURRENT_LAT
+    longitude = settings.CURRENT_LNG
+    # with open(settings.BASE_DIR+'/lat_lng.csv','rt')as f:
+    #     data = csv.reader(f)
+    #
+    #     for row in data:
+    #         latitude = row[0]
+    #         longitude= row[1]
 
     # REVIEW INTENT
     if action == 'get_review':
@@ -222,7 +224,7 @@ def new_webhook(request):
 
         response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY)
         outputs = response.json()
-        print("Output: ", outputs)
+        
         fulfillmentText = 'Search Result'
 
         aog = actions_on_google_response()
