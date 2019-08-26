@@ -167,8 +167,8 @@ def new_webhook(request):
     if action == 'get_distance':
         gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
         translator = Translator()
-        lat = latitude # get_lat()
-        lng = longitude # get_lng()
+        lat = settings.CURRENT_LAT # get_lat()
+        lng = settings.CURRENT_LNG # get_lng()
         current_location = get_formatted_address(gmaps, lat, lng)
 
         text = req.get('queryResult').get('queryText')
@@ -224,7 +224,7 @@ def new_webhook(request):
 
         response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY)
         outputs = response.json()
-        
+
         fulfillmentText = 'Search Result'
 
         aog = actions_on_google_response()
@@ -263,8 +263,8 @@ def new_webhook(request):
         qrText = translator.translate(text)
         lngSrc = qrText.src
 
-        lat = latitude # get_lat()
-        lng = longitude # get_lng()
+        lat = settings.CURRENT_LAT # get_lat()
+        lng = settings.CURRENT_LNG # get_lng()
         current_location = get_formatted_address(gmaps, lat, lng)
 
         if lngSrc != 'en':
@@ -277,8 +277,8 @@ def new_webhook(request):
     if action == 'get_places':
         gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
 
-        lat = latitude # get_lat()
-        lng = longitude # get_lng()
+        lat = settings.CURRENT_LAT # get_lat()
+        lng = settings.CURRENT_LNG # get_lng()
         current_location = get_formatted_address(gmaps, lat, lng)
 
         text = req.get('queryResult').get('queryText')
