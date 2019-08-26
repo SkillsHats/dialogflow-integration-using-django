@@ -89,15 +89,17 @@ def kelvin_to_celsius(kelvin):
 
 @csrf_exempt
 def get_location(request):
-    json_data=json.loads(request.body)
-    latitude = json_data['lat']
-    longitude = json_data['lng']
+    if request.method == 'POST':
+        json_data=json.loads(request.body)
+        latitude = json_data['lat']
+        longitude = json_data['lng']
 
-    with open('lat_lng.csv', mode='w') as file:
-        writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow([latitude, longitude])
+        with open('lat_lng.csv', mode='w') as file:
+            writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            writer.writerow([latitude, longitude])
 
-    return HttpResponse('ok')
+        return HttpResponse('ok')
+    return HttpResponse('Send data in POST Method')
 
 @csrf_exempt
 def new_webhook(request):
