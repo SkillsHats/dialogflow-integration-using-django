@@ -87,9 +87,6 @@ def kelvin_to_celsius(kelvin):
 
 
 class Location(object):
-    latitude = 0
-    longitude = 0
-
     def __init__(self, lat=0, lng=0):
         self._lat = lat
         self._lng = lng
@@ -100,12 +97,20 @@ class Location(object):
     def get_lng(self):
         return self._lng
 
+latitude = 0
+longitude = 0
 
 @csrf_exempt
 def get_location(request):
     json_data=json.loads(request.body)
-    Location.latitude = json_data['lat']
-    Location.longitude = json_data['lng']
+    global latitude
+    global longitude
+    latitude = json_data['lat']
+    longitude = json_data['lng']
+    # print("------------------------", latitude, longitude)
+    # loc = Location(json_data['lat'], json_data['lng'])
+    # Location.latitude = json_data['lat']
+    # Location.longitude = json_data['lng']
     return HttpResponse('ok')
 #
 # def location():
@@ -115,6 +120,7 @@ def get_location(request):
 def new_webhook(request):
     req = json.loads(request.body)
     action = req.get('queryResult').get('action')
+    # print(latitude, longitude)
 
     # REVIEW INTENT
     if action == 'get_review':
@@ -167,8 +173,8 @@ def new_webhook(request):
     if action == 'get_distance':
         gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
         translator = Translator()
-        lat = Location.latitude # get_lat()
-        lng = Location.longitude # get_lng()
+        lat = latitude # get_lat()
+        lng = longitude # get_lng()
         current_location = get_formatted_address(gmaps, lat, lng)
 
         text = req.get('queryResult').get('queryText')
@@ -263,8 +269,8 @@ def new_webhook(request):
         qrText = translator.translate(text)
         lngSrc = qrText.src
 
-        lat = Location.latitude # get_lat()
-        lng = Location.longitude # get_lng()
+        lat = latitude # get_lat()
+        lng = longitude # get_lng()
         current_location = get_formatted_address(gmaps, lat, lng)
 
         if lngSrc != 'en':
@@ -277,8 +283,8 @@ def new_webhook(request):
     if action == 'get_places':
         gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
 
-        lat = Location.latitude # get_lat()
-        lng = Location.longitude # get_lng()
+        lat = latitude # get_lat()
+        lng = longitude # get_lng()
         current_location = get_formatted_address(gmaps, lat, lng)
 
         text = req.get('queryResult').get('queryText')
