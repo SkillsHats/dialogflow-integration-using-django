@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Geolocation</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style media="screen">
+        .dialogflow {margin: 0px 35%}
+    </style>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  </head>
+  <body>
+      {% block content %} {% endblock content %}
+    <script>
+      var map, infoWindow;
+      function initMap() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            var pos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            console.log(pos);
+            ajaxRequest(pos);
+          }, function() {
+            handleError('Something wrong!');
+          });
+        } else {
+          handleError("Browser doesn't support Geolocation");
+        }
+      }
+
+      function handleError(msg) {
+        console.log(msg);
+      }
+
+      function ajaxRequest(pos) {
+          $.ajax({
+              url: '/location/',
+              method: 'POST',
+              data: JSON.stringify(pos),
+              success: function(data){
+                  console.log(data)
+              }
+          })
+      }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLVMNz1H2_nkFyphOKej2wo4Wsr5jH054&callback=initMap">
+    </script>
+  </body>
+</html>

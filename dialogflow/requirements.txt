@@ -4,7 +4,7 @@ certifi==2019.6.16
 chardet==3.0.4
 cssselect==1.1.0
 dialogflow==0.6.0
-Django==2.1.*
+Django==2.2.4
 feedfinder2==0.0.4
 feedparser==5.2.1
 geographiclib==1.49
@@ -21,10 +21,12 @@ idna==2.8
 jieba3k==0.35.1
 lxml==4.4.1
 Pillow==6.1.0
+pkg-resources==0.0.0
 protobuf==3.9.1
 pyasn1==0.4.6
 pyasn1-modules==0.2.6
 python-dateutil==2.8.0
+python-decouple==3.1
 pytz==2019.2
 PyYAML==5.1.2
 requests==2.22.0

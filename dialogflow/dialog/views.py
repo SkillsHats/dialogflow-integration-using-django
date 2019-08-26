@@ -8,24 +8,14 @@ import json
 import googlemaps
 import dialogflow
 
-import requests, json 
+import requests, json
 
 from googletrans import Translator
 
-# define home function 
+# define home function
 def home(request):
-    _html = """
-    <div style="margin: 0px 35%">
-        <iframe
-            allow="microphone;"
-            width="350"
-            height="430"
-            src="https://console.dialogflow.com/api-client/demo/embedded/26dd64a2-4638-439c-8278-5fd4b386ed5d">
-        </iframe>
-    </div>
-    """
-
-    return HttpResponse( _html )
+    template_name = 'index.html'
+    return render(request, template_name, {})
 
 
 def detect_intent_texts(project_id, session_id, texts, language_code='en'):
@@ -76,30 +66,56 @@ def get_formatted_address(gmaps, lat, lng):
     return current_location
 
 def get_temperature(city_name):
-    api_key = "369a7e29d89a64d59392e041482475ec"
+    api_key = settings.OPEN_WEATHER_API_KEY
     base_url = "http://api.openweathermap.org/data/2.5/weather?"
-    complete_url = base_url + "appid=" + api_key + "&q=" + city_name 
-    
-    response = requests.get(complete_url) 
+    complete_url = base_url + "appid=" + api_key + "&q=" + city_name
 
-    x = response.json() 
-    
-    if x["cod"] != "404": 
+    response = requests.get(complete_url)
+
+    x = response.json()
+
+    if x["cod"] != "404":
         y = x["main"]
         return y
 
-    else: 
-        print(" City Not Found ") 
+    else:
+        print(" City Not Found ")
 
 
 def kelvin_to_celsius(kelvin):
-    return round(kelvin - 273.15) 
+    return round(kelvin - 273.15)
+
+
+class Location(object):
+    latitude = 0
+    longitude = 0
+
+    def __init__(self, lat=0, lng=0):
+        self._lat = lat
+        self._lng = lng
+
+    def get_lat(self):
+        return self._lat
+
+    def get_lng(self):
+        return self._lng
+
+
+@csrf_exempt
+def get_location(request):
+    json_data=json.loads(request.body)
+    Location.latitude = json_data['lat']
+    Location.longitude = json_data['lng']
+    return HttpResponse('ok')
+#
+# def location():
+#     print("Lat: " + Location.latitude + " " + Location.longitude)
 
 @csrf_exempt
 def new_webhook(request):
     req = json.loads(request.body)
     action = req.get('queryResult').get('action')
- 
+
     # REVIEW INTENT
     if action == 'get_review':
         gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
@@ -113,7 +129,7 @@ def new_webhook(request):
             new_text = translator.translate(text, dest='en')
             text = new_text.text
 
-        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY) 
+        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY)
         outputs = response.json()
 
         name = outputs['results'][0]['name']
@@ -151,8 +167,8 @@ def new_webhook(request):
     if action == 'get_distance':
         gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
         translator = Translator()
-        lat = get_lat()
-        lng = get_lng()
+        lat = Location.latitude # get_lat()
+        lng = Location.longitude # get_lng()
         current_location = get_formatted_address(gmaps, lat, lng)
 
         text = req.get('queryResult').get('queryText')
@@ -184,10 +200,10 @@ def new_webhook(request):
             return JsonResponse(reply, safe=False)
 
         if 'railway' in text:
-            
+
             url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
 
-            response =  requests.get(url + 'location=' + str(lat) +',' + str(lng) + '&rankby=distance&type=train_station&key=' + settings.GOOGLE_MAP_KEY) 
+            response =  requests.get(url + 'location=' + str(lat) +',' + str(lng) + '&rankby=distance&type=train_station&key=' + settings.GOOGLE_MAP_KEY)
             outputs = response.json()
 
             stations = []
@@ -205,25 +221,25 @@ def new_webhook(request):
             return JsonResponse(reply, safe=False)
 
         url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?'
-        
-        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY) 
+
+        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY)
         outputs = response.json()
-        
+
         fulfillmentText = 'Search Result'
 
         aog = actions_on_google_response()
         aog_sr = aog.simple_response([
             [fulfillmentText, fulfillmentText, False]
         ])
-        
+
         cafes = []
 
         address = get_formatted_address(
-                            gmaps, 
-                            outputs['results'][0]['geometry']['location']['lat'], 
+                            gmaps,
+                            outputs['results'][0]['geometry']['location']['lat'],
                             outputs['results'][0]['geometry']['location']['lng'])
         dist = gmaps.distance_matrix(
-                    current_location, 
+                    current_location,
                     address)['rows'][0]['elements'][0]
 
         name = outputs['results'][0]['name']
@@ -247,8 +263,8 @@ def new_webhook(request):
         qrText = translator.translate(text)
         lngSrc = qrText.src
 
-        lat = get_lat()
-        lng = get_lng()
+        lat = Location.latitude # get_lat()
+        lng = Location.longitude # get_lng()
         current_location = get_formatted_address(gmaps, lat, lng)
 
         if lngSrc != 'en':
@@ -257,12 +273,12 @@ def new_webhook(request):
             return JsonResponse(reply, safe=False)
 
         reply = {'fulfillmentText': current_location}
-    
+
     if action == 'get_places':
         gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
 
-        lat = get_lat()
-        lng = get_lng()
+        lat = Location.latitude # get_lat()
+        lng = Location.longitude # get_lng()
         current_location = get_formatted_address(gmaps, lat, lng)
 
         text = req.get('queryResult').get('queryText')
@@ -276,10 +292,10 @@ def new_webhook(request):
             text = new_text.text
 
         url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?'
-        
-        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY) 
+
+        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY)
         outputs = response.json()
-        
+
         hotels = []
 
         for output in outputs['results']:
@@ -329,8 +345,8 @@ def new_webhook(request):
 
         temp = get_temperature(city_name)
         current_temperature = kelvin_to_celsius(temp["temp"])
-        # current_pressure = temp["pressure"] 
-        # current_humidiy = temp["humidity"] 
+        # current_pressure = temp["pressure"]
+        # current_humidiy = temp["humidity"]
         message = str(current_temperature) + " degrees Celsius"
 
         if lngSrc != 'en':
@@ -362,7 +378,7 @@ def webhook(request):
         gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
         url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?'
         text = req.get('queryResult').get('queryText')
-        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY) 
+        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY)
         outputs = response.json()
 
         name = outputs['results'][0]['name']
@@ -407,10 +423,10 @@ def webhook(request):
             return JsonResponse(reply, safe=False)
 
         if 'railway' in text:
-            
+
             url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
 
-            response =  requests.get(url + 'location=' + str(lat) +',' + str(lng) + '&rankby=distance&type=train_station&key=' + settings.GOOGLE_MAP_KEY) 
+            response =  requests.get(url + 'location=' + str(lat) +',' + str(lng) + '&rankby=distance&type=train_station&key=' + settings.GOOGLE_MAP_KEY)
             outputs = response.json()
 
             stations = []
@@ -428,25 +444,25 @@ def webhook(request):
             return JsonResponse(reply, safe=False)
 
         url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?'
-        
-        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY) 
+
+        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY)
         outputs = response.json()
-        
+
         fulfillmentText = 'Search Result'
 
         aog = actions_on_google_response()
         aog_sr = aog.simple_response([
             [fulfillmentText, fulfillmentText, False]
         ])
-        
+
         cafes = []
 
         address = get_formatted_address(
-                            gmaps, 
-                            outputs['results'][0]['geometry']['location']['lat'], 
+                            gmaps,
+                            outputs['results'][0]['geometry']['location']['lat'],
                             outputs['results'][0]['geometry']['location']['lng'])
         dist = gmaps.distance_matrix(
-                    current_location, 
+                    current_location,
                     address)['rows'][0]['elements'][0]
 
         name = outputs['results'][0]['name']
@@ -466,7 +482,7 @@ def webhook(request):
         current_location = get_formatted_address(gmaps, lat, lng)
         reply = {'fulfillmentText': current_location}
 
-   
+
     if action == 'get_places':
         gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
 
@@ -477,10 +493,10 @@ def webhook(request):
         text = req.get('queryResult').get('queryText')
 
         url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?'
-        
-        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY) 
+
+        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY)
         outputs = response.json()
-        
+
         hotels = []
 
         for output in outputs['results']:
@@ -499,7 +515,7 @@ def webhook(request):
         ff_text = ff_response.fulfillment_text(fulfillmentText)
         ff_messages = ff_response.fulfillment_messages([aog_sr, aog_sc])
 
-        reply = ff_response.main_response(ff_text, ff_messages)    
+        reply = ff_response.main_response(ff_text, ff_messages)
 
     # Temperature Intent
     if action == 'get_temperature':
@@ -540,7 +556,7 @@ def webhook(request):
         ff_messages = ff_response.fulfillment_messages([aog_sr, aog_sc])
 
         reply = ff_response.main_response(ff_text, ff_messages)
-        
+
 
     # response for basic card
     if action == 'get_basiccard':
