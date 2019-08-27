@@ -86,19 +86,25 @@ def get_temperature(city_name):
 def kelvin_to_celsius(kelvin):
     return round(kelvin - 273.15)
 
+latitude = 0
+longitude = 0
 
 @csrf_exempt
 def get_location(request):
     if request.method == 'POST':
         json_data=json.loads(request.body)
+        global latitude
+        global longitude
         latitude = json_data['lat']
         longitude = json_data['lng']
-
-        settings.CURRENT_LAT = latitude
-        settings.CURRENT_LNG = longitude
-        # with open(settings.BASE_DIR+'/lat_lng.csv', mode='w') as file:
-        #     writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        #     writer.writerow([latitude, longitude])
+        try:
+            with open(settings.BASE_DIR+'/lat_lng.csv', mode='w') as file:
+                writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                writer.writerow([latitude, longitude])
+        except:
+            from .models import Location
+            location = Location(latitude, longitude)
+            location.save()
 
         return HttpResponse('ok')
     return HttpResponse('Send data in POST Method')
@@ -107,14 +113,21 @@ def get_location(request):
 def new_webhook(request):
     req = json.loads(request.body)
     action = req.get('queryResult').get('action')
-    latitude = settings.CURRENT_LAT
-    longitude = settings.CURRENT_LNG
-    # with open(settings.BASE_DIR+'/lat_lng.csv','rt')as f:
-    #     data = csv.reader(f)
-    #
-    #     for row in data:
-    #         latitude = row[0]
-    #         longitude= row[1]
+
+    latitude = 0
+    longitude = 0
+    try:
+        with open(settings.BASE_DIR+'/lat_lng.csv','rt')as f:
+            data = csv.reader(f)
+
+            for row in data:
+                latitude = row[0]
+                longitude= row[1]
+    except:
+        from .models import Location
+        location = Location.objects.all().last()
+        latitude = location.lat
+        longitude = location.lng
 
     # REVIEW INTENT
     if action == 'get_review':
@@ -167,8 +180,8 @@ def new_webhook(request):
     if action == 'get_distance':
         gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
         translator = Translator()
-        lat = settings.CURRENT_LAT # get_lat()
-        lng = settings.CURRENT_LNG # get_lng()
+        lat = latitude
+        lng = longitude
         current_location = get_formatted_address(gmaps, lat, lng)
 
         text = req.get('queryResult').get('queryText')
@@ -263,8 +276,8 @@ def new_webhook(request):
         qrText = translator.translate(text)
         lngSrc = qrText.src
 
-        lat = settings.CURRENT_LAT # get_lat()
-        lng = settings.CURRENT_LNG # get_lng()
+        lat = latitude
+        lng = longitude
         current_location = get_formatted_address(gmaps, lat, lng)
 
         if lngSrc != 'en':
@@ -277,8 +290,8 @@ def new_webhook(request):
     if action == 'get_places':
         gmaps = googlemaps.Client(key=settings.GOOGLE_MAP_KEY)
 
-        lat = settings.CURRENT_LAT # get_lat()
-        lng = settings.CURRENT_LNG # get_lng()
+        lat = latitude
+        lng = longitude
         current_location = get_formatted_address(gmaps, lat, lng)
 
         text = req.get('queryResult').get('queryText')
