@@ -235,7 +235,7 @@ def new_webhook(request):
 
         url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?'
 
-        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY)
+        response =  requests.get(url + 'query=' + text + '&location=' + str(lat) +',' + str(lng) + '&key=' + settings.GOOGLE_MAP_KEY)
         outputs = response.json()
 
         fulfillmentText = 'Search Result'
@@ -306,7 +306,7 @@ def new_webhook(request):
 
         url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?'
 
-        response =  requests.get(url + 'query=' + text + '&key=' + settings.GOOGLE_MAP_KEY)
+        response =  requests.get(url + 'query=' + text + '&location=' + str(lat) +',' + str(lng) + '&key=' + settings.GOOGLE_MAP_KEY)
         outputs = response.json()
 
         hotels = []
